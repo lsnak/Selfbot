@@ -22,7 +22,7 @@ blocked_users = set()
 def get_latest_version():
     try:
         version = requests.get(
-            "https://raw.githubusercontent.com/isnak/your-repository/main/version.txt"
+            "https://raw.githubusercontent.com/isnak/Selfbot/main/version.txt"
         )
         if version.status_code == 200:
             return version.text.strip()
