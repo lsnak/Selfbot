@@ -6,10 +6,12 @@ import sys
 import msvcrt
 import asyncio
 from datetime import datetime
+import requests
 
 dotenv.load_dotenv()
 token = os.getenv("TOKEN")
 prefix = os.getenv("PREFIX")
+currentVersion = "1.0.0"
 
 sinister = commands.Bot(command_prefix=prefix, self_bot=True, intents=discord.Intents.default())
 
@@ -17,12 +19,43 @@ current_task = None
 promo_data = {}
 blocked_users = set()
 
+def get_latest_version():
+    try:
+        version = requests.get(
+            "https://raw.githubusercontent.com/isnak/your-repository/main/version.txt"
+        )
+        if version.status_code == 200:
+            return version.text.strip()
+        else:
+            return None
+    except requests.RequestException:
+        return None
+
+def check_version():
+    latest_version = get_latest_version()
+
+    if latest_version and latest_version != currentVersion:
+        changes = requests.get(
+            "https://raw.githubusercontent.com/isnak/your-repository/main/data/changelog.txt"
+        )
+
+        if "REQUIRED" in changes.text:
+            print(f"\033[91mThere is a required update on the GitHub, you must update to continue using Avarice: https://github.com/isnak/your-repository\n\nChangelog:\n{changes.text}\033[0m")
+            input("\nPress enter to exit...")
+            os._exit(0)
+        else:
+            print(f"\033[93mThis version is outdated. Please update to version {latest_version} from https://github.com/isnak/your-repository\n\nChangelog:\n{changes.text}\033[0m")
+    else:
+        print("\033[92mYou're using the latest version!\033[0m")
+
 @sinister.event
 async def on_ready():
     print(f"""
         Successfully Logged In
         [Client] {sinister.user.name}
     """)
+    check_version()
+
     async def check_exit():
         while True:
             await asyncio.sleep(0.1)
